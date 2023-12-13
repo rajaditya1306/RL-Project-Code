@@ -1,0 +1,70 @@
+defaults:
+  - _self_
+  - agent: icm_apt
+  - override hydra/launcher: submitit_local
+
+# mode
+reward_free: false
+# task settings
+task: walker_stand
+obs_type: states # [states, pixels]
+frame_stack: 3 # only works if obs_type=pixels
+action_repeat: 1 # set to 2 for pixels
+discount: 0.99
+# train settings
+num_train_frames: 2000010
+num_seed_frames: 4000
+# eval
+eval_every_frames: 10000
+num_eval_episodes: 10
+# pretrained
+snapshot_ts: 100000
+snapshot_base_dir: ./pretrained_models
+# replay buffer
+replay_buffer_size: 1000000
+replay_buffer_num_workers: 4
+batch_size: ${agent.batch_size}
+nstep: ${agent.nstep}
+update_encoder: false # can be either true or false depending if we want to fine-tune encoder
+# misc
+seed: 2
+device: cuda
+save_video: true
+save_train_video: false
+use_tb: false
+use_wandb: false
+# experiment
+experiment: exp
+
+# Could not override 'pretrained_agent'.
+# To append to your config use +pretrained_agent=icm_apt
+# Key 'pretrained_agent' is not in struct
+#     full_key: pretrained_agent
+#     object_type=dict
+# fix above error by adding the following to the config file:
+
+# pretrained_agent:
+#   _target_: icm_apt
+#   snapshot_path: ${snapshot_base_dir}/${obs_type}/walker/icm_apt/snapshot_${snapshot_ts}.pt
+
+# Error executing job with overrides: ['pretrained_agent=icm_apt', 'task=walker_run', 'snapshot_ts=100000', 'obs_type=states']
+# Error in call to target 'agent.ddpg.DDPGAgent':
+# TypeError("__init__() got an unexpected keyword argument 'update_encoder'")
+# full_key: agent
+# fix above error by adding the following to the config file:
+
+
+hydra:
+  run:
+    dir: ./exp_local/${now:%Y.%m.%d}/${now:%H%M%S}_${agent.name}
+  sweep:
+    dir: ./exp_sweep/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}
+    subdir: ${hydra.job.num}
+  launcher:
+    timeout_min: 4300
+    cpus_per_task: 10
+    gpus_per_node: 1
+    tasks_per_node: 1
+    mem_gb: 160
+    nodes: 1
+    submitit_folder: ./exp_sweep/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}/.slurm

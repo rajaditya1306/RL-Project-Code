@@ -1,0 +1,4 @@
+- +pretrained_agent=icm_apt
+- task=walker_walk
+- snapshot_ts=100000
+- obs_type=states
